@@ -84,7 +84,6 @@ def main():
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
 
-    
     bb_img = pg.Surface((20, 20))  # 爆弾用の空のSurfaceを作成
     pg.draw.circle(bb_img,(255, 0, 0),(10, 10), 10)  # 赤い円
     bb_img.set_colorkey((0, 0, 0))  # 黒を透明に
@@ -125,7 +124,6 @@ def main():
         #    sum_mv[0] -= 5
         #if key_lst[pg.K_RIGHT]:
         #    sum_mv[0] += 5
-
         kk_rct.move_ip(sum_mv)
         if check_bound(kk_rct) != (True, True):
             kk_rct.move_ip(-sum_mv[0], -sum_mv[1])  # 移動をなかったことに

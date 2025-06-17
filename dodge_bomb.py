@@ -1,6 +1,7 @@
 import os
 import random
 import sys
+import time
 import pygame as pg
 
 
@@ -21,12 +22,39 @@ def check_bound(rct: pg.Rect) -> tuple[bool, bool]:
     戻り値：タプル（横方向、縦方向の画面内外判定結果）
     画面内ならTrue,画面外ならFalse
     """
-    yoko, tate = True, True
-    if rct.left < 0 or WIDTH < rct.right:  # 横方向判定
+    yoko, tate = True, True  # 初期値：画面内
+    if rct.left < 0 or WIDTH < rct.right:  # 横方向画面外判定
         yoko = False
-    if rct.top < 0 or HEIGHT < rct.bottom:  # 縦方向判定
+    if rct.top < 0 or HEIGHT < rct.bottom:  # 縦方向画面外判定
         tate = False
     return yoko, tate
+
+def gameover(screen: pg.Surface) -> None:
+    """
+    引数:Screen（画面）
+    戻り値：なし
+    ゲームオーバー時に画面を黒くし、「Game Over」と泣いているこうかとん画像を5秒表示する。
+    """
+    # 半透明の黒い画面を作成
+    blackout = pg.Surface((WIDTH, HEIGHT))  # 画面サイズと同じSurfaceを作成
+    blackout.set_alpha(200)  # 透明度決定（透明:0～不透明:255）
+    blackout.fill((0, 0, 0))  # 黒色で塗りつぶす（255, 255, 255は白色）
+
+    # 泣いているこうかとん画像
+    kk_img_cry = pg.transform.rotozoom(pg.image.load("fig/8.png"), 0, 0.9)
+    kk_rct_cry = kk_img_cry.get_rect(center=(WIDTH // 2, HEIGHT // 2))  # 画面中央に配置
+
+    # 「Game Over」の文字列
+    font = pg.font.Font(None, 100)
+    text = font.render("Game Over", True, (255, 255, 255))  # 白色でGame Overを描画
+    text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 4))  # 画面上部中央に配置
+
+    # 描画
+    screen.blit(blackout, (0, 0))
+    screen.blit(kk_img_cry, kk_rct_cry)
+    screen.blit(text, text_rect)
+    pg.display.update()  # display.update()する関数
+    time.sleep(5)
 
 
 def main():
@@ -36,20 +64,21 @@ def main():
     kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
-    bb_img = pg.Surface((20, 20))
-    pg.draw.circle(bb_img,(255, 0, 0),(10, 10), 10)
-    bb_img.set_colorkey((0, 0, 0))
-    bb_rct = bb_img.get_rect()
-    bb_rct.center = (random.randint(0, WIDTH), random.randint(0, HEIGHT))
-    vx, vy = +5, +5
+    bb_img = pg.Surface((20, 20))  # 爆弾用の空のSurfaceを作成
+    pg.draw.circle(bb_img,(255, 0, 0),(10, 10), 10)  # 赤い円
+    bb_img.set_colorkey((0, 0, 0))  # 黒を透明に
+    bb_rct = bb_img.get_rect()  # 爆弾Rectを取得
+    bb_rct.center = (random.randint(0, WIDTH), random.randint(0, HEIGHT))  # 横と縦座標の乱数
+    vx, vy = +5, +5  # 爆弾の移動速度
     clock = pg.time.Clock()
     tmr = 0
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT: 
                 return
-        if kk_rct.colliderect(bb_rct):
+        if kk_rct.colliderect(bb_rct):  # こうかとんRectと爆弾Rectの衝突判定
             print("ゲームオーバー")
+            gameover(screen)  # ゲームオーバー画面を表示する
             return      
           
         screen.blit(bg_img, [0, 0]) 
@@ -71,15 +100,15 @@ def main():
 
         kk_rct.move_ip(sum_mv)
         if check_bound(kk_rct) != (True, True):
-            kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
+            kk_rct.move_ip(-sum_mv[0], -sum_mv[1])  # 移動をなかったことに
         screen.blit(kk_img, kk_rct)
         bb_rct.move_ip(vx, vy)  # 爆弾の移動
         yoko, tate = check_bound(bb_rct)
         if not yoko:  # 横方向にはみ出ていたら
             vx *= -1
-        if not tate:
-            vy *= -1
-        screen.blit(bb_img, bb_rct)
+        if not tate:  # 縦方向にはみ出ていたら
+            vy *= -1  
+        screen.blit(bb_img, bb_rct)  # 爆弾の描画
         pg.display.update()
         tmr += 1
         clock.tick(50)
